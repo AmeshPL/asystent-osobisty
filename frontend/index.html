@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Asystent</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f1115" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="pinOverlay">
+    <div id="pinBox">
+      <p>Podaj PIN dostepu</p>
+      <input id="pinInput" type="password" inputmode="numeric" autocomplete="off" />
+      <button id="pinSubmit">Zatwierdz</button>
+      <p id="pinError" hidden>Nieprawidlowy PIN, sprobuj ponownie.</p>
+    </div>
+  </div>
+
+  <main>
+    <h1>Asystent</h1>
+    <p id="status">Stuknij, zeby zaczac rozmowe</p>
+
+    <button id="talkBtn" aria-label="Mow">
+      <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor">
+        <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z"/>
+        <path d="M19 11a1 1 0 0 0-2 0 5 5 0 0 1-10 0 1 1 0 0 0-2 0 7 7 0 0 0 6 6.92V20H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-2.08A7 7 0 0 0 19 11z"/>
+      </svg>
+    </button>
+
+    <button id="resetBtn">Nowa rozmowa</button>
+
+    <a id="googleBanner" href="/auth/google" hidden>Polacz konto Google (zadania, kalendarz, poczta)</a>
+
+    <div id="log"></div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+:root {
+  color-scheme: dark;
+  --bg: #0f1115;
+  --fg: #eef0f4;
+  --muted: #8a8f99;
+  --accent: #5b8cff;
+  --accent-active: #ff5b7a;
+  --card: #1a1d24;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+main {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1.25rem 3rem;
+  text-align: center;
+}
+
+#pinOverlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+#pinOverlay[hidden] { display: none; }
+
+#pinBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 220px;
+}
+
+#pinInput {
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #333947;
+  background: var(--card);
+  color: var(--fg);
+  font-size: 1.1rem;
+  text-align: center;
+  letter-spacing: 0.2em;
+}
+
+#pinSubmit {
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-size: 1rem;
+}
+
+#pinError {
+  color: var(--accent-active);
+  font-size: 0.85rem;
+}
+
+h1 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 1rem 0 0.25rem;
+}
+
+#status {
+  color: var(--muted);
+  min-height: 1.4em;
+  margin-bottom: 2.5rem;
+}
+
+#talkBtn {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 0 rgba(91, 140, 255, 0.5);
+  transition: background 0.2s, transform 0.1s;
+}
+
+#talkBtn:active {
+  transform: scale(0.96);
+}
+
+#talkBtn.listening {
+  background: var(--accent-active);
+  animation: pulse 1.4s infinite;
+}
+
+#talkBtn.speaking {
+  background: #35c46a;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 91, 122, 0.5); }
+  70% { box-shadow: 0 0 0 22px rgba(255, 91, 122, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 91, 122, 0); }
+}
+
+#resetBtn {
+  margin-top: 1.75rem;
+  background: none;
+  border: 1px solid #333947;
+  color: var(--muted);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+#googleBanner {
+  display: block;
+  margin-top: 1.5rem;
+  color: var(--accent);
+  font-size: 0.85rem;
+  text-decoration: none;
+  border: 1px solid var(--accent);
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+}
+
+#log {
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+}
+
+.bubble {
+  padding: 0.65rem 0.9rem;
+  border-radius: 12px;
+  background: var(--card);
+  line-height: 1.4;
+  font-size: 0.95rem;
+}
+
+.bubble.user {
+  align-self: flex-end;
+  background: #23324d;
+}
+
+.bubble.assistant {
+  align-self: flex-start;
+}
