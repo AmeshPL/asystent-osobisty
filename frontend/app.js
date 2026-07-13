@@ -7,6 +7,8 @@ const pinInput = document.getElementById("pinInput");
 const pinSubmit = document.getElementById("pinSubmit");
 const pinError = document.getElementById("pinError");
 const googleBanner = document.getElementById("googleBanner");
+const waveformEl = document.getElementById("waveform");
+const waveformBars = [...waveformEl.children];
 
 const PIN_KEY = "assistantPin";
 const getPin = () => localStorage.getItem(PIN_KEY) || "";
@@ -76,6 +78,63 @@ function pickPolishVoice() {
 speechSynthesis.onvoiceschanged = pickPolishVoice;
 pickPolishVoice();
 
+let audioCtx = null;
+let analyser = null;
+let micStream = null;
+let waveformRAF = null;
+
+async function ensureMicStream() {
+  if (micStream) return micStream;
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 64;
+    audioCtx.createMediaStreamSource(micStream).connect(analyser);
+  } catch (err) {
+    console.error("Brak dostepu do mikrofonu dla wizualizacji:", err);
+  }
+  return micStream;
+}
+
+function setBarHeight(bar, ratio) {
+  bar.style.height = `${6 + Math.max(0, Math.min(1, ratio)) * 34}px`;
+}
+
+function animateListeningBars() {
+  if (!analyser) return;
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  const loop = () => {
+    analyser.getByteFrequencyData(data);
+    waveformBars.forEach((bar, i) => {
+      const v = data[Math.floor((i * data.length) / waveformBars.length)] / 255;
+      setBarHeight(bar, v);
+    });
+    waveformRAF = requestAnimationFrame(loop);
+  };
+  loop();
+}
+
+function animateSpeakingBars() {
+  const start = performance.now();
+  const loop = (t) => {
+    const elapsed = (t - start) / 1000;
+    waveformBars.forEach((bar, i) => {
+      const v = ((Math.sin(elapsed * 7 + i * 0.9) + 1) / 2) * (0.55 + Math.random() * 0.45);
+      setBarHeight(bar, v);
+    });
+    waveformRAF = requestAnimationFrame(loop);
+  };
+  waveformRAF = requestAnimationFrame(loop);
+}
+
+function stopWaveform() {
+  if (waveformRAF) cancelAnimationFrame(waveformRAF);
+  waveformRAF = null;
+  waveformEl.classList.remove("active", "speaking");
+  waveformBars.forEach((bar) => setBarHeight(bar, 0));
+}
+
 function addBubble(role, text) {
   const div = document.createElement("div");
   div.className = `bubble ${role}`;
@@ -97,14 +156,23 @@ function speak(text) {
     utter.lang = "pl-PL";
     if (polishVoice) utter.voice = polishVoice;
     utter.rate = 1.02;
-    utter.onend = resolve;
-    utter.onerror = resolve;
+    utter.onend = () => {
+      stopWaveform();
+      resolve();
+    };
+    utter.onerror = () => {
+      stopWaveform();
+      resolve();
+    };
     setState("speaking", "Asystent mowi...");
+    waveformEl.classList.add("speaking");
+    animateSpeakingBars();
     speechSynthesis.speak(utter);
   });
 }
 
 async function sendMessage(text) {
+  stopWaveform();
   addBubble("user", text);
   setState(null, "Myslenie...");
   try {
@@ -132,10 +200,14 @@ async function sendMessage(text) {
   }
 }
 
-function startListening() {
+async function startListening() {
   if (busy || !recognition) return;
   busy = true;
   setState("listening", "Sluchani...");
+
+  await ensureMicStream();
+  waveformEl.classList.add("active");
+  animateListeningBars();
 
   recognition.onresult = (event) => {
     const transcript = event.results[0][0].transcript;
@@ -143,12 +215,14 @@ function startListening() {
   };
 
   recognition.onerror = () => {
+    stopWaveform();
     setState(null, "Nie udalo sie uslyszec. Sprobuj ponownie.");
     busy = false;
   };
 
   recognition.onend = () => {
     if (statusEl.textContent === "Sluchani...") {
+      stopWaveform();
       setState(null, "Stuknij, zeby mowic");
       busy = false;
     }

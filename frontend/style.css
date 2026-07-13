@@ -83,7 +83,26 @@ h1 {
   margin-bottom: 2.5rem;
 }
 
+#ringWrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  opacity: 0;
+}
+
 #talkBtn {
+  position: relative;
+  z-index: 1;
   width: 96px;
   height: 96px;
   border-radius: 50%;
@@ -95,6 +114,7 @@ h1 {
   justify-content: center;
   box-shadow: 0 0 0 0 rgba(91, 140, 255, 0.5);
   transition: background 0.2s, transform 0.1s;
+  animation: breathe 3.2s ease-in-out infinite;
 }
 
 #talkBtn:active {
@@ -106,14 +126,74 @@ h1 {
   animation: pulse 1.4s infinite;
 }
 
+#talkBtn.listening ~ .ring,
+#ringWrap:has(#talkBtn.listening) .ring {
+  border-color: var(--accent-active);
+  animation: ringOut 1.6s ease-out infinite;
+}
+
+#ringWrap:has(#talkBtn.listening) .ring.r2 {
+  animation-delay: 0.5s;
+}
+
 #talkBtn.speaking {
   background: #35c46a;
+  animation: sway 0.6s ease-in-out infinite;
+}
+
+#ringWrap:has(#talkBtn.speaking) .ring {
+  border-color: #35c46a;
+  animation: ringOut 1.8s ease-out infinite;
+}
+
+#ringWrap:has(#talkBtn.speaking) .ring.r2 {
+  animation-delay: 0.6s;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.035); }
+}
+
+@keyframes sway {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
 }
 
 @keyframes pulse {
   0% { box-shadow: 0 0 0 0 rgba(255, 91, 122, 0.5); }
   70% { box-shadow: 0 0 0 22px rgba(255, 91, 122, 0); }
   100% { box-shadow: 0 0 0 0 rgba(255, 91, 122, 0); }
+}
+
+@keyframes ringOut {
+  0% { transform: scale(0.75); opacity: 0.55; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+
+#waveform {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 44px;
+  margin-top: 1.25rem;
+}
+
+#waveform span {
+  width: 4px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--muted);
+  transition: height 0.09s ease, background 0.25s ease;
+}
+
+#waveform.active span {
+  background: var(--accent-active);
+}
+
+#waveform.speaking span {
+  background: #35c46a;
 }
 
 #resetBtn {
