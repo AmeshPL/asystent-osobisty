@@ -78,54 +78,35 @@ function pickPolishVoice() {
 speechSynthesis.onvoiceschanged = pickPolishVoice;
 pickPolishVoice();
 
-let audioCtx = null;
-let analyser = null;
-let micStream = null;
+// Uwaga: swiadomie NIE uzywamy tu wlasnego getUserMedia do analizy dzwieku.
+// Rownolegly strumien audio obok SpeechRecognition potrafi na czesci
+// telefonow z Androidem "odebrac" mikrofon rozpoznawaniu mowy, przez co
+// asystent nic nie slyszy mimo ze animacja wyglada jakby sluchala.
 let waveformRAF = null;
-
-async function ensureMicStream() {
-  if (micStream) return micStream;
-  try {
-    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 64;
-    audioCtx.createMediaStreamSource(micStream).connect(analyser);
-  } catch (err) {
-    console.error("Brak dostepu do mikrofonu dla wizualizacji:", err);
-  }
-  return micStream;
-}
 
 function setBarHeight(bar, ratio) {
   bar.style.height = `${6 + Math.max(0, Math.min(1, ratio)) * 34}px`;
 }
 
-function animateListeningBars() {
-  if (!analyser) return;
-  const data = new Uint8Array(analyser.frequencyBinCount);
-  const loop = () => {
-    analyser.getByteFrequencyData(data);
-    waveformBars.forEach((bar, i) => {
-      const v = data[Math.floor((i * data.length) / waveformBars.length)] / 255;
-      setBarHeight(bar, v);
-    });
-    waveformRAF = requestAnimationFrame(loop);
-  };
-  loop();
-}
-
-function animateSpeakingBars() {
+function animateBars(rhythm) {
   const start = performance.now();
   const loop = (t) => {
     const elapsed = (t - start) / 1000;
     waveformBars.forEach((bar, i) => {
-      const v = ((Math.sin(elapsed * 7 + i * 0.9) + 1) / 2) * (0.55 + Math.random() * 0.45);
+      const v = ((Math.sin(elapsed * rhythm + i * 0.9) + 1) / 2) * (0.55 + Math.random() * 0.45);
       setBarHeight(bar, v);
     });
     waveformRAF = requestAnimationFrame(loop);
   };
   waveformRAF = requestAnimationFrame(loop);
+}
+
+function animateListeningBars() {
+  animateBars(9);
+}
+
+function animateSpeakingBars() {
+  animateBars(7);
 }
 
 function stopWaveform() {
@@ -200,12 +181,11 @@ async function sendMessage(text) {
   }
 }
 
-async function startListening() {
+function startListening() {
   if (busy || !recognition) return;
   busy = true;
   setState("listening", "Sluchani...");
 
-  await ensureMicStream();
   waveformEl.classList.add("active");
   animateListeningBars();
 
