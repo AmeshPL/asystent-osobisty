@@ -20,13 +20,33 @@ app.get("/auth/google", requirePin, (req, res) => {
   res.redirect(getAuthUrl());
 });
 
+function statusPage({ title, message, ok }) {
+  return `<!doctype html>
+<html lang="pl"><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>${title}</title>
+<style>
+  body { margin:0; min-height:100dvh; display:flex; align-items:center; justify-content:center;
+    background:#0f1115; color:#eef0f4; font-family:-apple-system,"Segoe UI",Roboto,sans-serif; text-align:center; }
+  main { padding:2rem; max-width:320px; }
+  p { color:#8a8f99; margin-bottom:1.75rem; }
+  a { display:inline-block; background:${ok ? "#5b8cff" : "#333947"}; color:white; text-decoration:none;
+    padding:0.75rem 1.5rem; border-radius:999px; font-weight:600; }
+</style></head>
+<body><main>
+  <h1>${title}</h1>
+  <p>${message}</p>
+  <a href="/">Wroc do asystenta</a>
+</main></body></html>`;
+}
+
 app.get("/auth/google/callback", async (req, res) => {
   try {
     await handleCallback(req.query.code);
-    res.send("Konto Google polaczone. Mozesz zamknac ta karte i wrocic do asystenta.");
+    res.send(statusPage({ title: "Konto Google polaczone", message: "Mozesz wrocic do asystenta.", ok: true }));
   } catch (err) {
     console.error(err);
-    res.status(500).send("Blad podczas laczenia z kontem Google.");
+    res.status(500).send(statusPage({ title: "Blad polaczenia", message: "Nie udalo sie polaczyc konta Google. Sprobuj ponownie.", ok: false }));
   }
 });
 
