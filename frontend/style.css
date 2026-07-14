@@ -27,6 +27,109 @@ main {
   text-align: center;
 }
 
+#menuBtn {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 6;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #333947;
+  background: var(--card);
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#historyBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 7;
+}
+
+#historyBackdrop[hidden] { display: none; }
+
+#historyDrawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(300px, 82vw);
+  background: var(--card);
+  z-index: 8;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.4);
+}
+
+#historyDrawer.open {
+  transform: translateX(0);
+}
+
+#historyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 1px solid #262a34;
+  font-weight: 600;
+}
+
+#historyHeader button {
+  background: none;
+  border: none;
+  color: var(--muted);
+  padding: 0.25rem;
+}
+
+#historyList {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0.5rem;
+}
+
+.historyItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  color: var(--fg);
+  margin-bottom: 0.25rem;
+}
+
+.historyItem:active {
+  background: #23262f;
+}
+
+.historyDate {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+
+.historyPreview {
+  display: block;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historyEmpty {
+  color: var(--muted);
+  font-size: 0.85rem;
+  padding: 0.75rem;
+}
+
 #pinOverlay {
   position: fixed;
   inset: 0;

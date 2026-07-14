@@ -9,6 +9,11 @@ const pinError = document.getElementById("pinError");
 const googleBanner = document.getElementById("googleBanner");
 const waveformEl = document.getElementById("waveform");
 const waveformBars = [...waveformEl.children];
+const menuBtn = document.getElementById("menuBtn");
+const historyDrawer = document.getElementById("historyDrawer");
+const historyBackdrop = document.getElementById("historyBackdrop");
+const historyClose = document.getElementById("historyClose");
+const historyListEl = document.getElementById("historyList");
 
 const PIN_KEY = "assistantPin";
 const getPin = () => localStorage.getItem(PIN_KEY) || "";
@@ -116,12 +121,107 @@ function stopWaveform() {
   waveformBars.forEach((bar) => setBarHeight(bar, 0));
 }
 
-function addBubble(role, text) {
+const HISTORY_KEY = "conversationHistory";
+const CURRENT_SESSION_KEY = "currentSessionId";
+
+function loadHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(history) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 50)));
+}
+
+function getCurrentSession(history) {
+  const id = localStorage.getItem(CURRENT_SESSION_KEY);
+  return history.find((s) => s.id === id);
+}
+
+function startNewSession() {
+  const history = loadHistory();
+  const session = { id: String(Date.now()), startedAt: new Date().toISOString(), messages: [] };
+  history.unshift(session);
+  saveHistory(history);
+  localStorage.setItem(CURRENT_SESSION_KEY, session.id);
+  renderHistoryList();
+}
+
+function appendToHistory(role, text) {
+  const history = loadHistory();
+  let session = getCurrentSession(history);
+  if (!session) {
+    session = { id: String(Date.now()), startedAt: new Date().toISOString(), messages: [] };
+    history.unshift(session);
+    localStorage.setItem(CURRENT_SESSION_KEY, session.id);
+  }
+  session.messages.push({ role, text });
+  saveHistory(history);
+  renderHistoryList();
+}
+
+function renderHistoryList() {
+  const history = loadHistory().filter((s) => s.messages.length > 0);
+  historyListEl.innerHTML = "";
+  if (history.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "historyEmpty";
+    empty.textContent = "Brak zapisanych rozmow.";
+    historyListEl.appendChild(empty);
+    return;
+  }
+  history.forEach((session) => {
+    const btn = document.createElement("button");
+    btn.className = "historyItem";
+    const date = new Date(session.startedAt).toLocaleString("pl-PL", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const preview = session.messages[0].text.slice(0, 48);
+    btn.innerHTML = `<span class="historyDate">${date}</span><span class="historyPreview"></span>`;
+    btn.querySelector(".historyPreview").textContent = preview;
+    btn.addEventListener("click", () => viewSession(session));
+    historyListEl.appendChild(btn);
+  });
+}
+
+function viewSession(session) {
+  logEl.innerHTML = "";
+  session.messages.forEach((m) => renderBubble(m.role, m.text));
+  closeHistoryDrawer();
+}
+
+function openHistoryDrawer() {
+  renderHistoryList();
+  historyDrawer.classList.add("open");
+  historyBackdrop.hidden = false;
+}
+
+function closeHistoryDrawer() {
+  historyDrawer.classList.remove("open");
+  historyBackdrop.hidden = true;
+}
+
+menuBtn.addEventListener("click", openHistoryDrawer);
+historyClose.addEventListener("click", closeHistoryDrawer);
+historyBackdrop.addEventListener("click", closeHistoryDrawer);
+
+function renderBubble(role, text) {
   const div = document.createElement("div");
   div.className = `bubble ${role}`;
   div.textContent = text;
   logEl.appendChild(div);
   div.scrollIntoView({ behavior: "smooth", block: "end" });
+}
+
+function addBubble(role, text) {
+  renderBubble(role, text);
+  appendToHistory(role, text);
 }
 
 function setState(state, message) {
@@ -216,22 +316,33 @@ talkBtn.addEventListener("click", startListening);
 resetBtn.addEventListener("click", async () => {
   await authFetch("/api/reset", { method: "POST" });
   logEl.innerHTML = "";
+  startNewSession();
   setState(null, "Nowa rozmowa. Stuknij, zeby mowic");
 });
+
+renderHistoryList();
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").catch(() => {});
 }
 
-function initAfterUnlock() {
+function refreshGoogleBanner() {
   googleBanner.href = `/auth/google?pin=${encodeURIComponent(getPin())}`;
   authFetch("/api/google/status")
     .then((r) => r.json())
     .then((data) => {
-      if (!data.connected) googleBanner.hidden = false;
+      googleBanner.hidden = !!data.connected;
     })
     .catch(() => {});
 }
+
+const initAfterUnlock = refreshGoogleBanner;
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && pinOverlay.hidden) {
+    refreshGoogleBanner();
+  }
+});
 
 const storedPin = getPin();
 if (storedPin) {
