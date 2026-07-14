@@ -23,4 +23,24 @@ async function listUpcomingEvents(maxResults = 5) {
   }));
 }
 
-module.exports = { listUpcomingEvents };
+async function createEvent({ title, start, end, allDay }) {
+  const calendarApi = await getCalendarApi();
+  const timeZone = "Europe/Warsaw";
+  const eventBody = { summary: title };
+
+  if (allDay) {
+    eventBody.start = { date: start };
+    eventBody.end = { date: end || start };
+  } else {
+    eventBody.start = { dateTime: start, timeZone };
+    eventBody.end = { dateTime: end, timeZone };
+  }
+
+  const { data } = await calendarApi.events.insert({
+    calendarId: "primary",
+    requestBody: eventBody,
+  });
+  return { id: data.id, summary: data.summary };
+}
+
+module.exports = { listUpcomingEvents, createEvent };

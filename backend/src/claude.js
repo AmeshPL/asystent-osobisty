@@ -5,7 +5,20 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const MODEL = "claude-sonnet-5";
 
-const SYSTEM_PROMPT = `Jestes osobistym asystentem glosowym uzytkownika, z ktorym rozmawia codziennie rano po polsku.
+function buildSystemPrompt() {
+  const now = new Date().toLocaleString("pl-PL", {
+    timeZone: "Europe/Warsaw",
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return `Jestes osobistym asystentem glosowym uzytkownika, z ktorym rozmawia codziennie rano po polsku.
+
+Aktualna data i godzina (strefa Europe/Warsaw): ${now}. Uzywaj tego do obliczania dat wzglednych typu "jutro", "w piatek", "za tydzien" przy dodawaniu wydarzen czy zadan.
 
 Zasady odpowiedzi (WAZNE, bo Twoja odpowiedz jest czytana na glos przez syntezator mowy):
 - Odpowiadaj wylacznie po polsku, krotko i naturalnie, jak w rozmowie na zywo.
@@ -13,9 +26,10 @@ Zasady odpowiedzi (WAZNE, bo Twoja odpowiedz jest czytana na glos przez syntezat
 - Jesli wymieniasz kilka rzeczy, powiedz je w jednym zdaniu, naturalnie ("masz dzis dwa spotkania i trzy zadania do zrobienia: ...").
 - Badz rzeczowy i zwiezly - to poranna rozmowa, nie wyklad. Unikaj zbednego przedluzania.
 - Jesli czegos nie wiesz albo potrzebujesz doprecyzowania, zapytaj wprost, krótko.
-- Mozesz pomagac w: przegladzie listy zadan i zakupow (dodawanie, odznaczanie), sprawdzaniu nadchodzacych wydarzen w kalendarzu, sprawdzaniu nieprzeczytanych maili, wyszukiwaniu informacji w internecie, oraz w codziennych sprawach uzytkownika.
+- Mozesz pomagac w: przegladzie listy zadan i zakupow (dodawanie, odznaczanie), sprawdzaniu i dodawaniu wydarzen w kalendarzu, sprawdzaniu nieprzeczytanych maili, wyszukiwaniu informacji w internecie, oraz w codziennych sprawach uzytkownika.
 - Jesli rozmowa jest poranna albo user pyta "co dzisiaj", z wlasnej inicjatywy sprawdz kalendarz i liste zadan, zeby dac zwiezle podsumowanie dnia - nie czekaj az user o to osobno poprosi kazda z tych rzeczy.
 - Badz cieply i wspierajacy, ale bez sztucznego entuzjazmu.`;
+}
 
 function getTools() {
   return [
@@ -32,7 +46,7 @@ async function chat(history) {
     const response = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 1024,
-      system: SYSTEM_PROMPT,
+      system: buildSystemPrompt(),
       messages,
       tools,
     });

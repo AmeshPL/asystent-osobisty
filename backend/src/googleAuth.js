@@ -6,7 +6,7 @@ const TOKENS_PATH = path.join(__dirname, "..", "tokens.json");
 
 const SCOPES = [
   "https://www.googleapis.com/auth/tasks",
-  "https://www.googleapis.com/auth/calendar.readonly",
+  "https://www.googleapis.com/auth/calendar.events",
   "https://www.googleapis.com/auth/gmail.readonly",
 ];
 
